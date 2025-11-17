@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
   const contactForm = document.getElementById('contactForm');
   const formMessage = document.getElementById('formMessage');
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzm66Zg2K7SNCy-wzZCLZbQxyIsGis3KFXW59JBNn1aUpY-5dnaePYiMMtLVMl-oz1eMA/exec';
 
   if (contactForm) {
     contactForm.addEventListener('submit', function(e) {
@@ -126,36 +127,71 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      showMessage(
-        '¡Gracias por contactarnos! Nos pondremos en contacto contigo pronto.',
-        'success'
-      );
+      // Mostrar mensaje de envío
+      showMessage('Enviando...', 'info');
 
-      contactForm.reset();
-
-      console.log('Form Data:', formData);
-      console.log('Form would be sent to: soluciones@velifatech.com');
+      // Enviar datos a Google Sheets
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(() => {
+        showMessage(
+          '¡Gracias por contactarnos! Nos pondremos en contacto contigo pronto.',
+          'success'
+        );
+        contactForm.reset();
+        console.log('Formulario enviado exitosamente a Google Sheets');
+      })
+      .catch((error) => {
+        console.error('Error al enviar:', error);
+        showMessage(
+          'Hubo un error al enviar el formulario. Por favor, intenta nuevamente o contáctanos directamente a soluciones@velifatech.com',
+          'error'
+        );
+      });
     });
   }
 
   function showMessage(message, type) {
     formMessage.textContent = message;
     formMessage.className = 'mt-3 show';
+    formMessage.style.transition = 'opacity 0.3s ease-in-out';
+    formMessage.style.opacity = '1';
 
     if (type === 'success') {
       formMessage.classList.add('success');
       formMessage.style.background = '#d4edda';
       formMessage.style.border = '1px solid #c3e6cb';
       formMessage.style.color = '#155724';
+      formMessage.style.padding = '12px';
+      formMessage.style.borderRadius = '4px';
+    } else if (type === 'info') {
+      formMessage.style.background = '#d1ecf1';
+      formMessage.style.border = '1px solid #bee5eb';
+      formMessage.style.color = '#0c5460';
+      formMessage.style.padding = '12px';
+      formMessage.style.borderRadius = '4px';
     } else {
       formMessage.style.background = '#f8d7da';
       formMessage.style.border = '1px solid #f5c6cb';
       formMessage.style.color = '#721c24';
+      formMessage.style.padding = '12px';
+      formMessage.style.borderRadius = '4px';
     }
 
+    // Ocultar mensaje después de 4 segundos con fade out
     setTimeout(() => {
-      formMessage.classList.remove('show');
-    }, 5000);
+      formMessage.style.opacity = '0';
+      setTimeout(() => {
+        formMessage.classList.remove('show');
+        formMessage.textContent = '';
+      }, 300);
+    }, 4000);
   }
 });
 
